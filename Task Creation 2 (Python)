@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 14 16:48:55 2023
+Created on ******
 
-@author: tmiyachi
+@author: ******
 """
 
 #from sqlalchemy import create_engine
@@ -26,9 +26,9 @@ case_id_var =27205
 with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
     ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
 
-ip = 'oraprod.frtservices.com'
+ip = 'oraprod.*********.com'
 port = 1522 
-SID = 'prod01.frtservices.com'
+SID = 'prod01.*********.com'
 username = ora_cred['user']
 password = ora_cred['pass']
 conn_str = (
@@ -74,8 +74,8 @@ query = """    SELECT DISTINCT
             END)||(
                 case when exists (select null from CASE_SPECIALISTS.CORP_ACTION ss where SS.CASE_ID=CD.CASE_ID and corp_act_type_id = 1 and ss.effective_date <  c.class_period_start_date) 
                         and exists (select null from CASE_SPECIALISTS.CORP_ACTION ss where SS.CASE_ID=CD.CASE_ID  and corp_act_type_id = 1 and ss.effective_date <= c.class_period_end_date and ss.effective_date >= c.class_period_start_date ) then chr(10)||'STOCK SPLIT(S) IN AND BEFORE CLASS PERIOD'||chr(10)
-                     when exists (select null from CASE_SPECIALISTS.CORP_ACTION ss where /*ss.cusip = cd.frt_security_id*/SS.CASE_ID=CD.CASE_ID and corp_act_type_id = 1 and ss.effective_date <= c.class_period_end_date and ss.effective_date >= c.class_period_start_date ) then chr(10)||'STOCK SPLIT IN CLASS PERIOD'||chr(10)
-                     when exists (select null from CASE_SPECIALISTS.CORP_ACTION ss where /*ss.cusip = cd.frt_security_id*/SS.CASE_ID=CD.CASE_ID and corp_act_type_id = 1 and ss.effective_date <  c.class_period_start_date) then chr(10)||'STOCK SPLIT BEFORE CLASS PERIOD'||chr(10)
+                     when exists (select null from CASE_SPECIALISTS.CORP_ACTION ss where /*ss.cusip = cd.***_security_id*/SS.CASE_ID=CD.CASE_ID and corp_act_type_id = 1 and ss.effective_date <= c.class_period_end_date and ss.effective_date >= c.class_period_start_date ) then chr(10)||'STOCK SPLIT IN CLASS PERIOD'||chr(10)
+                     when exists (select null from CASE_SPECIALISTS.CORP_ACTION ss where /*ss.cusip = cd.***_security_id*/SS.CASE_ID=CD.CASE_ID and corp_act_type_id = 1 and ss.effective_date <  c.class_period_start_date) then chr(10)||'STOCK SPLIT BEFORE CLASS PERIOD'||chr(10)
                      
                      else chr(10)||'NO KNOWN STOCK SPLIT'||chr(10)
                 END)||(
@@ -84,7 +84,7 @@ query = """    SELECT DISTINCT
          to_char(C.FILING_CLAIM_DEADLINE_DATE, 'MM/DD/YY') as FILING_CLAIM_DEADLINE_DATE,
          C.CASE_ID, 
             CLI.SHORT_NAME,
-            CASE WHEN (JB.SPECIAL_SLA = 3) THEN TRUNC(NCP.FRT_EDITS_DATE) + JB.SPECIAL_SLA WHEN JB.SPECIAL_SLA = 14 THEN 
+            CASE WHEN (JB.SPECIAL_SLA = 3) THEN TRUNC(NCP.***_EDITS_DATE) + JB.SPECIAL_SLA WHEN JB.SPECIAL_SLA = 14 THEN 
             (C.FILING_CLAIM_DEADLINE_DATE - jb.special_sla) ELSE NULL END AS "SLA",
             case when CCE.AGGREGATE = 'Y' and co.complaint_type_id <> 2 then 'Y' else ' ' end as "AGG DISAGG",
             case when CCE.USCA_ELIGIBILITY_TYPE  = 2 then 'Y' else ' ' end as "RUN SET",  
@@ -93,9 +93,9 @@ query = """    SELECT DISTINCT
              
          to_char(C.FILING_CLAIM_DEADLINE_DATE - 30, 'MM/DD/YY') AS DUE_DATE
     FROM
-       /*FRT.CASE_TRANSACTION  T,*/ PREFILING.CASE_TRANSACTION T, FRT.CASE C, FRT.CASE_DETAIL CD, FRT.ACCOUNT A, FRT.BROKER_FRT_TRANS_TYPE B, FRT.CLIENT CLI, JBROWN.PFA_CLIENT_FLAGS JB,
-        CASE_MASTER.COMPLAINT CO, CASE_MASTER.CASE_COMPLAINT_MAPPING CCM, FRT.ELIGIBILITY_RECORD E, case_master.settlement S, FRT.CLIENT_CASE_ENTITLEMENT_VW CCE,
-        FRT.NEW_CASE_POA NCP
+       /****.CASE_TRANSACTION  T,*/ PREFILING.CASE_TRANSACTION T, ***.CASE C, ***.CASE_DETAIL CD, ***.ACCOUNT A, ***.BROKER_***_TRANS_TYPE B, ***.CLIENT CLI, JBROWN.PFA_CLIENT_FLAGS JB,
+        CASE_MASTER.COMPLAINT CO, CASE_MASTER.CASE_COMPLAINT_MAPPING CCM, ***.ELIGIBILITY_RECORD E, case_master.settlement S, ***.CLIENT_CASE_ENTITLEMENT_VW CCE,
+        ***.NEW_CASE_POA NCP
     WHERE
         T.CASE_ID = CD.CASE_ID
     AND T.EXCLUDE_REASON IS NULL
@@ -104,7 +104,7 @@ query = """    SELECT DISTINCT
     AND T.CLIENT_ID = CLI.CLIENT_ID
     AND C.CASE_ID = NCP.CASE_ID
     AND C.CASE_ID = CD.CASE_ID
-    --AND NCP.FRT_EDITS_DATE IS NOT NULL
+    --AND NCP.***_EDITS_DATE IS NOT NULL
     AND C.CASE_ID = E.CASE_ID
     AND C.CASE_ID = CCM.CASE_ID
     AND C.CASE_ID = CCE.CASE_ID
@@ -125,7 +125,7 @@ query = """    SELECT DISTINCT
         select nvl(rcp.short_name, jb.client_name)
         from reporting.client_profile rcp full outer join JBROWN.PFA_CLIENT_FLAGS JB
              on rcp.short_name = jb.client_name
-        where (rcp.PFA_CLIENT = 1 or rcp.pfa_client is null or rcp.short_name in ('HEALTHCOR'))
+        where (rcp.PFA_CLIENT = 1 or rcp.pfa_client is null or rcp.short_name in ('******'))
         and   (JB.special_task is null or jb.special_task <> 'Y')
     )*/
     AND C.CASE_ID = CCM.CASE_ID
@@ -141,12 +141,12 @@ df = pd.read_sql(query, params=(case_id_var,), con=conn)
 
 
 options = {
-    'server': 'https://frtservices.atlassian.net',
+    'server': 'https://*********.******.net',
     'verify': True,
    # 'default_jira_options': {'reporter': {'name': 'Your_Username'}}
 }
 
-jira = JIRA(options=options, basic_auth=('tmiyachi@frtservices.com', 'ATATT3xFfGF0JEVpkT2jEdScFyk3gjekttF4zsgzrY1icbYR1zSaXrZiLgx7oSq876CynbxFDkSmLbZB5NwiFp-9mzSd1HHFkxdeFqE5FD2_a6SYh5wWUZm-WtK-bXjpWDxAU4fJGonkvxfWJN1d802fhJXaHP4NedPmtg7QBCiHWccTvUneCqI=882E390B'))
+jira = JIRA(options=options, basic_auth=('******@*********.com', 'ATATT3xFfGF0JEVpkT2jEdScFyk3gjekttF4zsgzrY1icbYR1zSaXrZiLgx7oSq876CynbxFDkSmLbZB5NwiFp-9mzSd1HHFkxdeFqE5FD2_a6SYh5wWUZm-WtK-bXjpWDxAU4fJGonkvxfWJN1d802fhJXaHP4NedPmtg7QBCiHWccTvUneCqI=882E390B'))
 
 
 table_columns = ['SHORT_NAME', 'SLA', 'AGG DISAGG', 'RUN SET', 'REACH OUT', 'TRANSFERS']
@@ -168,7 +168,7 @@ due_date = df['DUE_DATE'].values[0]
 #formatted_due_date = due_date_obj.strftime('%Y-%m-%d')  
 due_date = datetime.strptime(df.at[0, 'DUE_DATE'], '%m/%d/%y')
 #claim_deadline = due_date + relativedelta(months=1)
-#pull deadline from frt.case
+#pull deadline from ***.case
 
 # Add the table to the description
 description += '\n' + table
@@ -178,7 +178,7 @@ with pyodbc.connect(conn_str) as conn:
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT FILING_CLAIM_DEADLINE_DATE
-            FROM FRT.CASE
+            FROM ***.CASE
             WHERE CASE_ID = ?
             """, case_id_var)
         
@@ -196,13 +196,13 @@ issue_dict = {
     'summary': summary,
     'description': description,
     'issuetype': {'name': 'Task'},
-    'assignee': {'id': '5c61ac4c82b1b638507f14e9'},
-    #'assignee': {'id': '631f4e6fb0ac1ba7b8712933'},    
-   #'assignee':  {'Tomohiro Miyachi'},
+    'assignee': {'id': '******'},
+    #'assignee': {'id': '******'},    
+   #'assignee':  {'****** ******'},
     'customfield_11109':[str(case_id_var)],
     'customfield_11108': claim_filing_deadline[0].strftime('%Y-%m-%d'),
     'duedate':  due_date.strftime('%Y-%m-%d'),
-   # 'reporter': {'name': 'tmiyachi@frtservices.com'},
+   # 'reporter': {'name': '******************@*********.com'},
 }
 
 
@@ -212,15 +212,15 @@ try:
     new_pfa_issue = jira.create_issue(issue_dict)
     print('Successful PFA Ticket creation')
 except Exception as e:
-    print('only tomo can fix this:',e)
+    print('only ****** can fix this:',e)
 
 
 with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
     ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
 
-ip = 'oraprod.frtservices.com'
+ip = 'oraprod.*********.com'
 port = 1522 
-SID = 'prod01.frtservices.com'
+SID = 'prod01.*********.com'
 username = ora_cred['user']
 password = ora_cred['pass']
 conn_str = (
@@ -263,7 +263,7 @@ with pyodbc.connect(conn_str) as conn:
     with conn.cursor() as cursor:
     # Execute pop recon notes
         cursor.execute("""
-        UPDATE FRT.OPS_CASE_PROGRESS_TRACKER
+        UPDATE ***.OPS_CASE_PROGRESS_TRACKER
         SET PFA_COMPLETION_DATE = '1-JAN-1900'
         WHERE CASE_ID =?
         """, case_id_var,)
@@ -273,9 +273,9 @@ print('Progress tracker updated')
 with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
     ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
 
-ip = 'oraprod.frtservices.com'
+ip = 'oraprod.***************es.com'
 port = 1522 
-SID = 'prod01.frtservices.com'
+SID = 'prod01.*********.com'
 username = ora_cred['user']
 password = ora_cred['pass']
 conn_str = (
@@ -292,18 +292,7 @@ set_query = """
 select * from case_specialists.recon_notes
 where product_type = 'PFA' AND case_id = ?
 and client_name in (
-'LACAPCS','ROBECO','TELSTRA','UNITEDFOODNCA','GMPF','SAUDIARAMCO','SAUDIARAMCOUS','BBH','BBHALLSPRING','BBHBRINKER','BBHCAYMAN','BBHCGCM','BBHGUINESS',
-'BBHHOTCHKIS',
-'BBHLACAP',
-'BBHNWMUTUAL',
-'BBHNZAM',
-'BBHPGI',
-'BBHSIXCIRCLE',
-'BBHTCSB',
-'BBHTOUCHSTONE',
-'BBHUSGI',
-'BBHWELLSFARGO',
-'BBH_DATA_FEED'
+'******'
 
 )
 """
@@ -323,7 +312,7 @@ set_issue_dict = {
     'description': set_description,
     'issuetype': {'name': 'Sub-task'},
     'parent': {'key': new_pfa_key }, 
-    'assignee': {'id': '5c61ac4c82b1b638507f14e9'},
+    'assignee': {'id': '******'},
     'customfield_11109': [str(case_id_var)],
     'customfield_11108': claim_filing_deadline[0].strftime('%Y-%m-%d'),
     'duedate': set_due_date,
@@ -332,21 +321,21 @@ set_issue_dict = {
 try:
     new_set_issue = jira.create_issue(set_issue_dict)
     print('Successful set Ticket creation')
-except Exception as e:
-    print('only tomo can fix this:',e)
+Except Exception as e:
+    print('only ****** can fix this:',e)
     
-# SJPM TICKET CREATION START
+# ****** TICKET CREATION START
 
-sjpm_query = """
+****** = """
  WITH TEMP AS
     (
       SELECT DISTINCT
        CLI.SHORT_NAME,
-        'SJPM, JPMNMSIC2-'||UPPER(TO_CHAR(C.FILING_CLAIM_DEADLINE_DATE, 'MONTH'))||' '||EXTRACT(YEAR FROM C.FILING_CLAIM_DEADLINE_DATE)||' - '||C.CASE_ID||' - '||C.CASE_SHORT_NAME|| ' ( '|| C.FILING_CLAIM_DEADLINE_DATE||' ) '   AS summary, 
-'Please use the SJPM/JPMNMSIC2 PFA script to run PFA on all SJPM clients and JPMNMSIC2.
+        '******, ******-'||UPPER(TO_CHAR(C.FILING_CLAIM_DEADLINE_DATE, 'MONTH'))||' '||EXTRACT(YEAR FROM C.FILING_CLAIM_DEADLINE_DATE)||' - '||C.CASE_ID||' - '||C.CASE_SHORT_NAME|| ' ( '|| C.FILING_CLAIM_DEADLINE_DATE||' ) '   AS summary, 
+'Please use the ******/****************** PFA script to run PFA on all ****** clients and ******.
 That script can be found here:
 
-https://dev.azure.com/FRT-Tech/FRT-Ops/_git/ops_team?path=/SCHEMAS/DATA_RECON
+https://dev.azure.com/******
 
 Assign to the Eligibility and Damages Team when completed.' AS DESCRIPTION,
         C.CASE_ID, 
@@ -354,7 +343,7 @@ Assign to the Eligibility and Damages Team when completed.' AS DESCRIPTION,
         to_char(sysdate+10,'MM/DD/YY') as DUE_DATE
         
         FROM
-        PREFILING.CASE_TRANSACTION T, FRT.CASE C, FRT.CASE_DETAIL CD, FRT.ACCOUNT A, FRT.BROKER_FRT_TRANS_TYPE B, FRT.CLIENT CLI
+        PREFILING.CASE_TRANSACTION T, ***.CASE C, ***.CASE_DETAIL CD, ***.ACCOUNT A, ***.BROKER_***_TRANS_TYPE B, ***.CLIENT CLI
             WHERE T.CASE_ID = CD.CASE_ID
             AND CLI.CLIENT_ID = A.CLIENT_ID
             AND T.CLIENT_ID = CLI.CLIENT_ID
@@ -365,11 +354,11 @@ Assign to the Eligibility and Damages Team when completed.' AS DESCRIPTION,
             AND B.TRANS_TYPE = T.TRANS_TYPE
             AND T.TRADE_DATE BETWEEN C.CLASS_PERIOD_START_DATE AND C.CLASS_PERIOD_END_DATE
             AND B.BUY_SELL IN ('B', 'S', 'E')
-            AND ((CLI.SHORT_NAME  LIKE 'SJPM%') OR   CLI.SHORT_NAME = 'JPMNMSIC2') --,'NEW_PFA_CLIENT'
+            AND ((CLI.SHORT_NAME  LIKE '***%') OR   CLI.SHORT_NAME = '******') --,'NEW_PFA_CLIENT'
             AND C.CASE_ID = ?
                ORDER BY  C.CASE_ID,C.FILING_CLAIM_DEADLINE_DATE, CLI.SHORT_NAME DESC 
     )
-    SELECT DISTINCT  (REPLACE(MAX(T.SHORT_NAME) ,T.SHORT_NAME,'SJPM, JPMNMSIC2'))AS  CLIENT_NAME ,T.SUMMARY,T.DESCRIPTION,T.CASE_ID,T.FILING_CLAIM_DEADLINE_DATE,T.DUE_DATE
+    SELECT DISTINCT  (REPLACE(MAX(T.SHORT_NAME) ,T.SHORT_NAME,'******, ******'))AS  CLIENT_NAME ,T.SUMMARY,T.DESCRIPTION,T.CASE_ID,T.FILING_CLAIM_DEADLINE_DATE,T.DUE_DATE
     FROM TEMP T
     GROUP BY T.SHORT_NAME,T.SUMMARY,T.DESCRIPTION,T.CASE_ID,T.FILING_CLAIM_DEADLINE_DATE,T.DUE_DATE;
 
@@ -377,16 +366,16 @@ Assign to the Eligibility and Damages Team when completed.' AS DESCRIPTION,
 
     """
         
-sjpm_df = pd.read_sql(sjpm_query, params=(case_id_var,), con=conn)
+***_df = pd.read_sql(***_query, params=(case_id_var,), con=conn)
 
 conn.close()
 
-client = sjpm_df['CLIENT_NAME'].values[0]
-sjpm_summary = sjpm_df['SUMMARY'].values[0]
-#sjpm_summary = client +sjpm_summary
-sjpm_description = sjpm_df['DESCRIPTION'].values[0]
-sjpm_due_date = sjpm_df['DUE_DATE'].values[0]
-sjpm_due_date = datetime.strptime(sjpm_df.at[0, 'DUE_DATE'], '%m/%d/%y')
+client = ******['CLIENT_NAME'].values[0]
+****** = ******['SUMMARY'].values[0]
+#****** = client +******
+****** = ******['DESCRIPTION'].values[0]
+****** = ******['DUE_DATE'].values[0]
+****** = datetime.strptime(******.at[0, 'DUE_DATE'], '%m/%d/%y')
 
 
 
@@ -394,24 +383,24 @@ sjpm_due_date = datetime.strptime(sjpm_df.at[0, 'DUE_DATE'], '%m/%d/%y')
 
 
 # Create an issue taks type
-sjpm_issue_dict = {
+***_issue_dict = {
     'project': {'key': 'PFA'},
-    'summary': sjpm_summary,
-    'description': sjpm_description,
+    'summary': ***_summary,
+    'description': ***_description,
     'issuetype': {'name': 'Task'},
-    'assignee': {'id': '5c61ac4c82b1b638507f14e9'},
-   #'assignee':  {'Tomohiro Miyachi'},
+    'assignee': {'id': '******'},
+   #'assignee':  {'****** ******'},
     'customfield_11109':[str(case_id_var)],
     'customfield_11108': claim_filing_deadline[0].strftime('%Y-%m-%d'),
-    'duedate':  sjpm_due_date.strftime('%Y-%m-%d'),
-   # 'reporter': {'name': 'tmiyachi@frtservices.com'},
+    'duedate':  ***_due_date.strftime('%Y-%m-%d'),
+   # 'reporter': {'name': '******@*********.com'},
 }
 
 
 
 
 try:
-    new_sjpm_issue = jira.create_issue(sjpm_issue_dict)
-    print('Successful SJPM Ticket creation')
+    new_***_issue = jira.create_issue(***_issue_dict)
+    print('Successful *** Ticket creation')
 except Exception as e:
-    print('only tomo can fix this:',e)
+    print('only ****** can fix this:',e)
