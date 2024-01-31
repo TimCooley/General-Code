@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 20 15:07:30 2023
+Created on ******
 
-@author: tmiyachi
+@author: ******
 """
 
 
@@ -26,9 +26,9 @@ case_id_var = 27205
 with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
     ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
 
-ip = 'oraprod.frtservices.com'
+ip = 'oraprod.******.com'
 port = 1522 
-SID = 'prod01.frtservices.com'
+SID = 'prod01.******.com'
 username = ora_cred['user']
 password = ora_cred['pass']
 conn_str = (
@@ -71,8 +71,8 @@ query = """SELECT DISTINCT
             THEN 'TYPE 3 Needed'
             ELSE 'Reach Out To Case Specialist to Confirm SET Has Been Staged'
             END)||(
-                case when exists (select null from frt.stock_split ss where ss.cusip = cd.cusip and ss.split_date <  c.class_period_start_date) then chr(10)||'STOCK SPLIT BEFORE CLASS PERIOD'||chr(10)
-                     when exists (select null from frt.stock_split ss where ss.cusip = cd.cusip and ss.split_date <= c.class_period_end_date  ) then chr(10)||'STOCK SPLIT IN CLASS PERIOD'||chr(10)
+                case when exists (select null from ******.stock_split ss where ss.cusip = cd.cusip and ss.split_date <  c.class_period_start_date) then chr(10)||'STOCK SPLIT BEFORE CLASS PERIOD'||chr(10)
+                     when exists (select null from ******.stock_split ss where ss.cusip = cd.cusip and ss.split_date <= c.class_period_end_date  ) then chr(10)||'STOCK SPLIT IN CLASS PERIOD'||chr(10)
                      else chr(10)||'NO KNOWN STOCK SPLIT'||chr(10)
                 END) || '  RECORDS: select * from case_specialists.recon_notes where product_type = ''DA'' AND case_id = ' || ? as decription_header,                  
                
@@ -81,8 +81,8 @@ query = """SELECT DISTINCT
         
          to_char(C.FILING_CLAIM_DEADLINE_DATE - 30, 'dd/MON/yy') AS DUE_DATE
     FROM
-        FRT.CASE C, FRT.CASE_DETAIL CD,
-        CASE_MASTER.COMPLAINT CO, CASE_MASTER.CASE_COMPLAINT_MAPPING CCM, FRT.ELIGIBILITY_RECORD E, case_master.settlement S, FRT.CLIENT_CASE_ENTITLEMENT_VW CCE
+        ******.CASE C, ******.CASE_DETAIL CD,
+        CASE_MASTER.COMPLAINT CO, CASE_MASTER.CASE_COMPLAINT_MAPPING CCM, ******.ELIGIBILITY_RECORD E, case_master.settlement S, ******.CLIENT_CASE_ENTITLEMENT_VW CCE
 WHERE
      C.CASE_ID = CD.CASE_ID
     AND C.CASE_ID = E.CASE_ID
@@ -100,12 +100,12 @@ df = pd.read_sql(query, params=( case_id_var,case_id_var,), con=conn)
 
 
 options = {
-    'server': 'https://frtservices.atlassian.net',
+    'server': 'https://******services.atlassian.net',
     'verify': False,
    # 'default_jira_options': {'reporter': {'name': 'Your_Username'}}
 }
 
-jira = JIRA(options, basic_auth=('tmiyachi@frtservices.com', 'ATATT3xFfGF0JEVpkT2jEdScFyk3gjekttF4zsgzrY1icbYR1zSaXrZiLgx7oSq876CynbxFDkSmLbZB5NwiFp-9mzSd1HHFkxdeFqE5FD2_a6SYh5wWUZm-WtK-bXjpWDxAU4fJGonkvxfWJN1d802fhJXaHP4NedPmtg7QBCiHWccTvUneCqI=882E390B'))
+jira = JIRA(options, basic_auth=('tmiyachi@******services.com', 'ATATT3xFfGF0JEVpkT2jEdScFyk3gjekttF4zsgzrY1icbYR1zSaXrZiLgx7oSq876CynbxFDkSmLbZB5NwiFp-9mzSd1HHFkxdeFqE5FD2_a6SYh5wWUZm-WtK-bXjpWDxAU4fJGonkvxfWJN1d802fhJXaHP4NedPmtg7QBCiHWccTvUneCqI=882E390B'))
 
 
 summary = df['SUMMARY'].values[0]
@@ -124,12 +124,12 @@ issue_dict = {
     'summary': summary,
     'description': description,
     'issuetype': {'name': 'Task'},
-    'assignee': {'id': '5c61ac4c82b1b638507f14e9'},
-   #'assignee':  {'Tomohiro Miyachi'},
+    'assignee': {'id': '******'},
+   #'assignee':  {'****** ******'},
     'customfield_11109':[str(case_id_var)],
     'customfield_11108': claim_filing_deadline,
     'duedate':due_date,
-   # 'reporter': {'name': 'tmiyachi@frtservices.com'},
+   # 'reporter': {'name': '******@******.com'},
 }
 
 
@@ -137,14 +137,14 @@ try:
     new_da_issue = jira.create_issue(issue_dict)
     print('Successful DA Ticket creation')
 except Exception as e:
-    print('only tomo can fix this:',e)
+    print('only ****** can fix this:',e)
 
 with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
     ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
 
-ip = 'oraprod.frtservices.com'
+ip = 'oraprod.******.com'
 port = 1522 
-SID = 'prod01.frtservices.com'
+SID = 'prod01.******.com'
 username = ora_cred['user']
 password = ora_cred['pass']
 conn_str = (
