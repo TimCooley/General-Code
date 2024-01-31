@@ -1,0 +1,183 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun 20 15:07:30 2023
+
+@author: tmiyachi
+"""
+
+
+from sqlalchemy import create_engine
+import pyodbc
+import pandas as pd
+import numpy as np
+from jira import JIRA
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from urllib.parse import quote_plus
+
+
+
+# create ticket , pop recon notes, output jira ticket id 
+# CHANGE FOR NEW CASE_ID SET TO 3
+
+case_id_var = 27205                                                                                                                                                                                 
+
+
+with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
+    ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
+
+ip = 'oraprod.frtservices.com'
+port = 1522 
+SID = 'prod01.frtservices.com'
+username = ora_cred['user']
+password = ora_cred['pass']
+conn_str = (
+    f"DRIVER={{Oracle in OraClient12Home1}};"
+    f"DBQ={ip}:{port}/{SID};"
+    f"UID={username};PWD={password}"
+)
+conn = pyodbc.connect(conn_str)
+cursor = conn.cursor()
+        
+query = """SELECT DISTINCT
+        UPPER(TO_CHAR(C.FILING_CLAIM_DEADLINE_DATE, 'MONTH'))||' '||EXTRACT(YEAR FROM C.FILING_CLAIM_DEADLINE_DATE)||' - '||C.CASE_ID||' - '||C.CASE_SHORT_NAME|| ' ( '|| C.FILING_CLAIM_DEADLINE_DATE||' ) '      AS summary, 
+        (CASE WHEN co.complaint_type_id = 2 THEN 'GLOBAL PASSIVE'||chr(10) ELSE '' END)||(
+                CASE
+            WHEN CLAIM_TYPE_ID = 1
+            AND ELIGIBLE_TRANS_TYPE in('A','B')
+            AND SEC_CODE_ID = 10
+            THEN 'Standard 10 B'
+            WHEN CLAIM_TYPE_ID = 2
+            AND ELIGIBLE_TRANS_TYPE in ('A','B')
+            AND SEC_CODE_ID = 11
+            THEN 'Primary Market IPO'
+            WHEN CLAIM_TYPE_ID = 3
+            AND ELIGIBLE_TRANS_TYPE in('A','B')
+            AND SEC_CODE_ID IN( 11,10)
+            THEN 'IPO Secondary Market'
+            WHEN CLAIM_TYPE_ID in(4,6)
+            AND ELIGIBLE_TRANS_TYPE in('H','S')
+            AND SEC_CODE_ID IN(12,14)
+            THEN 'MERGER'
+            WHEN CLAIM_TYPE_ID IN(6)
+            AND ELIGIBLE_TRANS_TYPE IN('B','A','S')
+            AND SEC_CODE_ID IN(11,10,13,14)
+            THEN 'Complex Case - Holdings Not Required For Eligibility'
+            WHEN CLAIM_TYPE_ID in(6)
+            AND SEC_CODE_ID IN(13,14)
+            AND ELIGIBLE_TRANS_TYPE = 'H' 
+            THEN 'Complex Case - Holdings Required For Eligibility'
+            WHEN ACT_CLASS_PERIOD_START = '01 JAN 1900' AND ACT_CLASS_PERIOD_START = '01 JAN 1900'
+            THEN 'TYPE 3 Needed'
+            ELSE 'Reach Out To Case Specialist to Confirm SET Has Been Staged'
+            END)||(
+                case when exists (select null from frt.stock_split ss where ss.cusip = cd.cusip and ss.split_date <  c.class_period_start_date) then chr(10)||'STOCK SPLIT BEFORE CLASS PERIOD'||chr(10)
+                     when exists (select null from frt.stock_split ss where ss.cusip = cd.cusip and ss.split_date <= c.class_period_end_date  ) then chr(10)||'STOCK SPLIT IN CLASS PERIOD'||chr(10)
+                     else chr(10)||'NO KNOWN STOCK SPLIT'||chr(10)
+                END) || '  RECORDS: select * from case_specialists.recon_notes where product_type = ''DA'' AND case_id = ' || ? as decription_header,                  
+               
+         to_char(C.FILING_CLAIM_DEADLINE_DATE, 'dd/MON/yy') as FILING_CLAIM_DEADLINE_DATE,
+         C.CASE_ID, 
+        
+         to_char(C.FILING_CLAIM_DEADLINE_DATE - 30, 'dd/MON/yy') AS DUE_DATE
+    FROM
+        FRT.CASE C, FRT.CASE_DETAIL CD,
+        CASE_MASTER.COMPLAINT CO, CASE_MASTER.CASE_COMPLAINT_MAPPING CCM, FRT.ELIGIBILITY_RECORD E, case_master.settlement S, FRT.CLIENT_CASE_ENTITLEMENT_VW CCE
+WHERE
+     C.CASE_ID = CD.CASE_ID
+    AND C.CASE_ID = E.CASE_ID
+    AND C.CASE_ID = CCM.CASE_ID
+    AND C.CASE_ID = CCE.CASE_ID
+    AND S.COMPLAINT_ID = CCM.COMPLAINT_ID
+    AND C.CASE_ID = ?
+    AND C.CASE_ID = CCM.CASE_ID
+    AND CO.COMPLAINT_ID = CCM.COMPLAINT_ID
+    
+      
+  """
+    
+df = pd.read_sql(query, params=( case_id_var,case_id_var,), con=conn)
+
+
+options = {
+    'server': 'https://frtservices.atlassian.net',
+    'verify': False,
+   # 'default_jira_options': {'reporter': {'name': 'Your_Username'}}
+}
+
+jira = JIRA(options, basic_auth=('tmiyachi@frtservices.com', 'ATATT3xFfGF0JEVpkT2jEdScFyk3gjekttF4zsgzrY1icbYR1zSaXrZiLgx7oSq876CynbxFDkSmLbZB5NwiFp-9mzSd1HHFkxdeFqE5FD2_a6SYh5wWUZm-WtK-bXjpWDxAU4fJGonkvxfWJN1d802fhJXaHP4NedPmtg7QBCiHWccTvUneCqI=882E390B'))
+
+
+summary = df['SUMMARY'].values[0]
+description = df['DECRIPTION_HEADER'].values[0]
+due_date = df['DUE_DATE'].values[0]
+due_date_str = df.at[0, 'DUE_DATE']  
+due_date = datetime.strptime(due_date_str, '%d/%b/%y').strftime('%Y-%m-%d')
+claim_filing_deadline = df['FILING_CLAIM_DEADLINE_DATE'].values[0]
+claim_string = df.at[0, 'FILING_CLAIM_DEADLINE_DATE'] 
+claim_filing_deadline = datetime.strptime(claim_string, '%d/%b/%y').strftime('%Y-%m-%d')
+
+
+# Create an issue taks type
+issue_dict = {
+    'project': {'key': 'DA'},
+    'summary': summary,
+    'description': description,
+    'issuetype': {'name': 'Task'},
+    'assignee': {'id': '5c61ac4c82b1b638507f14e9'},
+   #'assignee':  {'Tomohiro Miyachi'},
+    'customfield_11109':[str(case_id_var)],
+    'customfield_11108': claim_filing_deadline,
+    'duedate':due_date,
+   # 'reporter': {'name': 'tmiyachi@frtservices.com'},
+}
+
+
+try:
+    new_da_issue = jira.create_issue(issue_dict)
+    print('Successful DA Ticket creation')
+except Exception as e:
+    print('only tomo can fix this:',e)
+
+with open(r'U:\secrets\oracle_user_pass.txt') as cred_file:
+    ora_cred = {line.split(',')[0]: line.split(',')[1] for line in cred_file.read().splitlines()}
+
+ip = 'oraprod.frtservices.com'
+port = 1522 
+SID = 'prod01.frtservices.com'
+username = ora_cred['user']
+password = ora_cred['pass']
+conn_str = (
+    f"DRIVER={{Oracle in OraClient12Home1}};"
+    f"DBQ={ip}:{port}/{SID};"
+    f"UID={username};PWD={password}"
+)
+conn = pyodbc.connect(conn_str)
+cursor = conn.cursor()
+
+with pyodbc.connect(conn_str) as conn:
+    with conn.cursor() as cursor:
+        # Execute pop recon notes
+        cursor.execute("""
+            call case_specialists.rlqa_helper.gen_da_list(p_case_id => ?)
+        """, case_id_var)
+print('Recon notes inserted')
+# use this key to use in recon notes
+new_da_key = new_da_issue.key
+#new_pfa_key = 'PFA-3974'
+
+
+
+with pyodbc.connect(conn_str) as conn:
+    with conn.cursor() as cursor:
+    # Execute pop recon notes
+        cursor.execute("""
+        update CASE_SPECIALISTS.recon_notes
+set JIRA_ID = ?
+where case_id = ?
+AND PRODUCT_TYPE = 'DA'
+        """,  new_da_key, case_id_var)
+    
+conn.commit()        
+print('Updated recon notes')     
+
