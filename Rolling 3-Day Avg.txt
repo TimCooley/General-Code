@@ -1,0 +1,25 @@
+-- Rolling 3-Day Avg
+
+  
+  WITH DailyTransactions AS (
+  SELECT 
+    date (transaction_time) as transaction_date,
+    SUM(transaction_amount) AS daily_total
+  FROM transactions
+  GROUP BY transaction_date
+),
+RollingAverage AS (
+  SELECT 
+    transaction_date,
+    daily_total,
+    AVG(daily_total) OVER (
+      ORDER BY transaction_date
+      ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as rolling_3_day_avg
+  FROM DailyTransactions
+)
+SELECT 
+  TRANSACTION_date, 
+  concat ('$', round(daily_total,2)) as daily_total, 
+  concat ('$',round (rolling_3_day_avg,2)) as rolling_3_day_avg
+FROM RollingAverage
+ORDER BY transaction_date;
